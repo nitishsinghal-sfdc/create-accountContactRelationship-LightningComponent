@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <auraComponent>ManageContactAccountRole</auraComponent>
+    <description>This tab will open a lightning component that helps to search for existing contacts, if found then use it, otherwise create new and allow associating with multiple existing accounts.</description>
+    <label>Manage contact Roles</label>
+    <mobileReady>false</mobileReady>
+    <motif>Custom15: People</motif>
+</CustomTab>
