@@ -1,0 +1,199 @@
+<!--
+* @author Nitish Singhal (nsinghal@deloitte.co.nz)
+* @date 15th October 2019
+* @description Lightning Component to search for existing contacts and associating with accounts.
+*
+* CHANGE LOG
+-->
+
+<aura:component controller="AccountContactRoleController" implements="flexipage:availableForAllPageTypes,force:lightningQuickActionWithoutHeader,force:appHostable" access="global" >
+    <aura:attribute name="searchAccKeyword" type="String" description="variable for account search keyword"/>
+    <aura:attribute name="dataRecords" type="List" description="used in the table to display the data with input checkboxes."/>
+    <aura:attribute name="contactRec" type="Contact" description="This is the contact record to be edited/created" default="{ 'sobjectType': 'Contact' }"/>
+    <aura:attribute name="directAccountId" type="String" description="variable to hold the direct Account Id for the searched contact"/>
+    <aura:attribute name="NumberOfAccountsInSearchResultMessage" type="String"/>
+
+    <lightning:card>
+    <div class="slds-p-around_small" style="background: white;">
+        <div class="slds-form--stacked">
+
+            <h3 class="slds-section-title--divider">Create/Update contact and associate accounts</h3>
+            <br/>
+            <!-- SHOW LOADING SPINNER-->
+            <lightning:spinner variant="brand" size="large" aura:id="Id_spinner" class="slds-hide" alternativeText="waiting for server..." />
+
+            <div class="slds-grid slds-gutters">
+                <div class="slds-col slds-size_6-of-8">
+                    <div class="slds-grid slds-gutters" onkeyup="{!c.searchContactOnEnterKey}">
+                        <div class="slds-col slds-size_2-of-8">
+                            <span style="float: right;padding-top: 5px;font-weight: bold;color: red;">*</span>
+                            <span style="float: right;padding-top: 5px;font-weight: bold;">Enter Email:</span>
+                        </div>
+                        <div class="slds-col slds-size_4-of-8">
+                            <span><lightning:input variant="label-hidden" placeholder="Search Email for example abc@email.com.." class="slds-form_line" aura:id="searchEmail" type="search" value="{!v.contactRec.Email}"/></span>
+                        </div>
+                        <div class="slds-col slds-size_1-of-8">
+                    <span>
+                        <lightning:buttonGroup>
+                            <lightning:button class="slds-button slds-button&#45;&#45;brand" aura:id="btnSearch" label="Search" onclick="{!c.searchContact}" />
+                        </lightning:buttonGroup>
+                    </span>
+                        </div>
+                    </div>
+                    <br/>
+                    <!-- ERROR MESSAGE IF NOT RECORDS FOUND-->
+                    <aura:if isTrue="{!v.dataRecords[0].isError}">
+                        <div class="slds-grid slds-gutters slds-notify_container slds-is-relative">
+                            <div class="slds-col slds-size_1-of-8"></div>
+                            <div class="slds-col slds-size_8-of-8 slds-notify slds-notify_toast slds-theme_error" role="alert">
+                                <div class="slds-notify__content">
+                                    <h2 class="slds-text-heading_small">{!v.dataRecords[0].errorMessage}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </aura:if>
+                    <aura:if isTrue="{!v.dataRecords[0].totalNumberOfContacts == 1}">
+                        <div class="slds-grid slds-gutters">
+                            <div class="slds-col slds-size_2-of-8">
+                                <span class="labelClass">First Name:</span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-8">
+                                <span><u><lightning:formattedUrl value="{!'/'+ v.dataRecords[0].acrRec.ContactId}" label="{!v.dataRecords[0].acrRec.Contact.FirstName}"></lightning:formattedUrl></u></span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-8">
+                                <span class="labelClass">Last Name:</span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-8">
+                                <span><u><lightning:formattedUrl value="{!'/'+ v.dataRecords[0].acrRec.ContactId}" label="{!v.dataRecords[0].acrRec.Contact.LastName}"></lightning:formattedUrl></u></span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-8">
+                                <span class="labelClass">Phone:</span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-8">
+                                <span><ui:outputText value="{!v.contactRec.Phone}"/></span>
+                            </div>
+                        </div>
+                        <br/>
+
+                    </aura:if>
+                    <aura:if isTrue="{!v.dataRecords[0].totalNumberOfContacts == 0}">
+                        <div class="slds-grid slds-gutters">
+                            <div class="slds-col slds-size_2-of-8">
+                                <span style="float: right;font-weight: bold;color: red;">*</span>
+                                <span class="labelClass">First Name:</span>
+
+                            </div>
+                            <div class="slds-col slds-size_1-of-8">
+                                <span><lightning:input variant="label-hidden" class="slds-form_line" aura:id="firstName" type="text" value="{!v.contactRec.FirstName}"/></span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-8">
+                                <span style="float: right;font-weight: bold;color: red;">*</span>
+                                <span class="labelClass">Last Name:</span>
+
+                            </div>
+                            <div class="slds-col slds-size_1-of-8">
+                                <span><lightning:input variant="label-hidden" class="slds-form_line" aura:id="lastName" type="text" value="{!v.contactRec.LastName}"/></span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-8">
+                                <span class="labelClass">Phone:</span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-8">
+                                <span><ui:inputPhone value="{!v.contactRec.Phone}"/></span>
+                            </div>
+                        </div>
+                        <br/>
+
+                    </aura:if>
+
+                    <aura:if isTrue="{!(v.dataRecords[0].totalNumberOfContacts == 0 || v.dataRecords[0].totalNumberOfContacts == 1)}">
+                        <h3 class="slds-section-title--divider">Associate Accounts to the Contact</h3><br/>
+
+                        <div class="slds-grid slds-gutters" onkeyup="{!c.searchAccount}">
+                            <div class="slds-col slds-size_2-of-8">
+                                <span style="float: right;padding-top: 5px;font-weight: bold;">Account Name:</span>
+                            </div>
+                            <div class="slds-col slds-size_4-of-8">
+                                <span><lightning:input variant="label-hidden" placeholder="Search Accounts..." class="slds-form_line"  aura:id="searchAccount" type="search" value="{!v.searchAccKeyword}"/></span>
+                            </div>
+                        </div>
+                        <br/>
+
+
+                    </aura:if>
+
+
+                    <aura:if isTrue="{!(v.dataRecords[0].acrRec != undefined)}">
+                        <div class="slds-grid">
+                            <div class="slds-col slds-size_2-of-8"></div>
+                            <div class="slds-col slds-size_8-of-8">
+                                <span style="font-weight: bold;color: rgb(255,183,93);">{!v.NumberOfAccountsInSearchResultMessage}</span>
+                            </div>
+                        </div>
+                        <div class="slds-grid">
+                            <div class="slds-col slds-size_2-of-8"/>
+                            <div class="slds-scrollable_y slds-col slds-size_8-of-8" style="max-height:20rem;overflow-y:auto;">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                    <thead>
+                                    <tr class="slds-text-title_caps">
+                                        <th scope="col">
+                                            <div class="slds-truncate" title="Add/Remove">Add/Remove</div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="slds-truncate" title="Default" style="text-align: center;">Default <br/> Account</div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="slds-truncate" title="Account Name">Account Name</div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="slds-truncate" title="Roles" style="text-align: center;">Roles</div>
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <aura:iteration items="{!v.dataRecords}" var="wrapperData">
+                                        <tr style="{!(wrapperData.acrRec.Id != null ? 'background-color: none' : 'background-color: rgb(255,183,93)')}">
+                                            <th scope="row" data-label="Add/Remove">
+                                                <div class="slds-truncate">
+                                                    <span><lightning:input style="text-align: center;" variant="label-hidden" label="{!wrapperData.acrRec.AccountId}" class="slds-form_line" type="checkbox" checked="{!wrapperData.isChecked}" value="{!wrapperData.isChecked}" onchange="{!c.selectedAccountChanged}"/></span>
+                                                </div>
+                                            </th>
+                                            <th scope="row" data-label="Default">
+                                                <div class="slds-truncate">
+                                                    <lightning:input style="text-align: center;" variant="label-hidden" label="{!wrapperData.acrRec.AccountId}" onchange="{!c.directAccountChanged}" class="slds-form_line" aura:id="isDirectCheckbox" type="checkbox" checked="{!wrapperData.acrRec.IsDirect}" value="{!wrapperData.acrRec.IsDirect}"/>
+                                                </div>
+                                            </th>
+                                            <th scope="row" data-label="Account Name">
+                                                <div class="slds-cell-wrap"><u><lightning:formattedUrl value="{!'/'+ wrapperData.acrRec.AccountId}" label="{!wrapperData.acrRec.Account.Name}"></lightning:formattedUrl></u></div>
+                                            </th>
+                                            <th scope="row" data-label="Roles">
+                                            <span>
+                                                <c:MultiSelectPicklist msoptions="{!wrapperData.availableRoles}" showFilterInput="false" showRefreshButton="false" showClearButton="false" selectedOptions="{!wrapperData.selectedRoles}"/>
+                                            </span>
+                                            </th>
+                                        </tr>
+                                    </aura:iteration>
+                                    <!--<tr style="height: 130px;"></tr>-->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <br/>
+                        </aura:if>
+                    <aura:if isTrue="{!(v.dataRecords[0].totalNumberOfContacts == 0 || v.dataRecords[0].totalNumberOfContacts == 1)}">
+                        <div class="slds-grid slds-gutters">
+                            <div class="slds-col slds-size_1-of-4"></div>
+                            <div class="slds-col slds-size_1-of-4">
+                                <span>
+                                    <lightning:buttonGroup>
+                                        <lightning:button class="slds-button slds-button--brand saveAndCancelButton" aura:id="btnRun" label="Save" onclick="{!c.validateData}" disabled="false"/>
+                                    </lightning:buttonGroup>
+                                </span>
+                            </div>
+                        </div>
+                    </aura:if>
+                </div>
+            </div>
+        </div>
+    </div>
+    </lightning:card>
+</aura:component>

@@ -1,0 +1,10 @@
+.THIS {
+    
+}
+.THIS .saveAndCancelButton{
+    border-radius: .25rem !important;
+}
+.THIS .labelClass{
+    float: right;
+    font-weight: bold;
+}
